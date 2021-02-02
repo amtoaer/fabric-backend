@@ -12,4 +12,9 @@ type InitInfo struct {
 	OrgAdmin       string
 	OrdererOrgName string
 	OrgResMgmt     *resmgmt.Client
+
+	ChaincodeID     string
+	ChaincodeGoPath string
+	ChaincodePath   string
+	UserName        string
 }
