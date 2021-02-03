@@ -1,8 +1,8 @@
 .PHONY: all dev clean build env-up env-down run
 
-all: clean build env-up run
+all: clean dev
 
-dev: build run
+dev: env-up build run
 
 build:
 	@echo "开始构建程序..."
@@ -25,6 +25,7 @@ run:
 
 clean: env-down
 	@echo "清理环境中..."
+	@rm ./fabric-backend
 	@rm -rf /tmp/kongyixueyuan-* kongyixueyuan
 	@-docker rm -f -v `docker ps -a --no-trunc | grep "kongyixueyuan" | cut -d ' ' -f 1` 2>/dev/null
 	@-docker rmi `docker images --no-trunc | grep "kongyixueyuan" | cut -d ' ' -f 1` 2>/dev/null
