@@ -16,8 +16,14 @@ import (
 
 const chaincodeVersion = "1.0.0"
 
+var initialized bool
+
+func init() {
+	initialized = false
+}
+
 // SetupSDK 通过配置文件初始化SDK
-func SetupSDK(configFile string, initialized bool) (*fabsdk.FabricSDK, error) {
+func SetupSDK(configFile string) (*fabsdk.FabricSDK, error) {
 	if initialized {
 		return nil, fmt.Errorf("Fabric SDK已经实例化")
 	}
@@ -26,6 +32,7 @@ func SetupSDK(configFile string, initialized bool) (*fabsdk.FabricSDK, error) {
 		return nil, fmt.Errorf("实例化Fabric SDK失败：%v", err)
 	}
 	fmt.Println("Fabric SDK初始化成功。")
+	initialized = true
 	return sdk, nil
 }
 

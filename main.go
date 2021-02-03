@@ -2,14 +2,14 @@ package main
 
 import (
 	"os"
+	"path"
 
 	"github.com/amtoaer/fabric-backend/sdk"
 	"github.com/amtoaer/fabric-backend/service"
 )
 
 const (
-	configFile  = "config.yaml"
-	initialized = false
+	configFile = "config.yaml"
 	// ChainCode 链码名
 	chainCode = "simplecc"
 )
@@ -17,19 +17,18 @@ const (
 func main() {
 	initInfo := &sdk.InitInfo{
 		ChannelID:      "kevinkongyixueyuan",
-		ChannelConfig:  "./fixtures/artifacts/channel.tx",
+		ChannelConfig:  path.Join(os.Getenv("GOPATH"), "src/allwens.work/fabric-backend/fixtures/artifacts/channel.tx"),
 		OrgAdmin:       "Admin",
 		OrgName:        "Org1",
 		OrdererOrgName: "orderer.kevin.kongyixueyuan.com",
 
-		ChaincodeID: chainCode,
-		// TODO: 因历史原因，fabric sdk创建链码包强制依赖GOPATH寻址，当前gomod模式需考虑迁移目录
+		ChaincodeID:     chainCode,
 		ChaincodeGoPath: os.Getenv("GOPATH"),
 		ChaincodePath:   "allwens.work/fabric-backend/chaincode",
 		UserName:        "User1",
 	}
 	// 初始化SDK
-	mySDK, err := sdk.SetupSDK(configFile, initialized)
+	mySDK, err := sdk.SetupSDK(configFile)
 	if err != nil {
 		panic(err)
 	}
