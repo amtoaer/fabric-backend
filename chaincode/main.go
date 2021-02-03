@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/protos/peer"
 )
@@ -19,4 +21,11 @@ func (c *ChainCode) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 	_, _ = stub.GetFunctionAndParameters()
 	// TODO: 链码业务逻辑
 	return shim.Success(nil)
+}
+
+func main() {
+	err := shim.Start(new(ChainCode))
+	if err != nil {
+		fmt.Println("启动链码时发生错误：%s", err)
+	}
 }
