@@ -18,14 +18,26 @@ func (c *ChainCode) Init(stub shim.ChaincodeStubInterface) peer.Response {
 
 //Invoke 链码调用
 func (c *ChainCode) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
-	_, _ = stub.GetFunctionAndParameters()
-	// TODO: 链码业务逻辑
-	return shim.Success(nil)
+	function, args := stub.GetFunctionAndParameters()
+	switch function {
+	case "addRecord":
+		return c.addRecord(stub, args)
+	case "updateRecord":
+		return c.updateRecord(stub, args)
+	case "queryRecordByKey":
+		return c.queryRecordByKey(stub, args)
+	case "queryRecordByPatientID":
+		return c.queryRecordByPatientID(stub, args)
+	case "queryRecordByDoctorID":
+		return c.queryRecordByDoctorID(stub, args)
+	default:
+		return shim.Error("调用方法不存在")
+	}
 }
 
 func main() {
 	err := shim.Start(new(ChainCode))
 	if err != nil {
-		fmt.Println("启动链码时发生错误：%s", err)
+		fmt.Printf("启动链码时发生错误：%s", err)
 	}
 }
