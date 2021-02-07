@@ -157,10 +157,10 @@ func (c *ChainCode) queryRecordByKey(stub shim.ChaincodeStubInterface, args []st
 	}
 	bytes, err := stub.GetState(args[0])
 	if err != nil {
-		return shim.Error("根据身份证号码查询信息失败。")
+		return shim.Error("根据key查询信息失败。")
 	}
 	if bytes == nil {
-		return shim.Error("根据身份证号码没有查询到相关信息。")
+		return shim.Error("根据key没有查询到相关信息。")
 	}
 	var result Record
 	err = json.Unmarshal(bytes, &result)
