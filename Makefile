@@ -25,8 +25,8 @@ run:
 
 clean: env-down
 	@echo "清理环境中..."
-	@rm ./fabric-backend
-	@rm -rf /tmp/kongyixueyuan-* kongyixueyuan
+	@-rm ./fabric-backend
+	@-rm -rf /tmp/kongyixueyuan-* kongyixueyuan
 	@-docker rm -f -v `docker ps -a --no-trunc | grep "kongyixueyuan" | cut -d ' ' -f 1` 2>/dev/null
 	@-docker rmi `docker images --no-trunc | grep "kongyixueyuan" | cut -d ' ' -f 1` 2>/dev/null
 	@echo "清理环境完成"
