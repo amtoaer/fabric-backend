@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path"
 
@@ -45,5 +46,41 @@ func main() {
 	}
 	// TODO: 该处创建的服务应该通过web中间层调用，待实现
 	// 创建服务
-	service.NewService(chainCode, channelClient)
+	s := service.NewService(chainCode, channelClient)
+	s.AddRecord(service.Record{
+		PatientName: "病人1",
+		PatientID:   "1",
+		DoctorName:  "医生1",
+		DoctorID:    "1",
+		Content:     "测试内容1",
+	})
+	s.AddRecord(service.Record{
+		PatientName: "病人1",
+		PatientID:   "1",
+		DoctorName:  "医生2",
+		DoctorID:    "2",
+		Content:     "测试内容2",
+	})
+	s.AddRecord(service.Record{
+		PatientName: "病人2",
+		PatientID:   "2",
+		DoctorName:  "医生1",
+		DoctorID:    "1",
+		Content:     "测试内容3",
+	})
+	result, err := s.QueryRecordByKey("1", "2")
+	if err != nil {
+		panic("第一次查询失败")
+	}
+	fmt.Printf("第一次查询结果：%v\n", result)
+	result, err = s.QueryRecordByDoctorID("1")
+	if err != nil {
+		panic("第二次查询失败")
+	}
+	fmt.Printf("第二次查询结果：%v\n", result)
+	result, err = s.QueryRecordByPatientID("1")
+	if err != nil {
+		panic("第三次查询失败")
+	}
+	fmt.Printf("第三次查询结果：%v\n", result)
 }
