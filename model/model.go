@@ -29,6 +29,8 @@ func init() {
 	if err != nil {
 		fmt.Printf("数据库连接失败，错误为：%v\n", err)
 	}
+	// FIXME:使用init初始化全局数据库连接，在连接出错时会出现许多意想不到的情况
+	// HELP:没有发现数据库连接的释放函数，需要进一步查阅
 }
 
 // GetUserByID 通过ID获取User（验证token时用）
@@ -41,7 +43,14 @@ func GetUserByID(ID uint) (*User, error) {
 // FindUser 通过用户编号和密码获取User（登录时用）
 func FindUser(ID, password string) (*User, error) {
 	var result *User
-	status := db.Where("ID = ? AND password = ?", ID, password).First(result)
+	status := db.Where("ID = ? AND Password = ?", ID, password).First(result)
+	return result, status.Error
+}
+
+// SearchUser 通过身份证号和姓名获取User（查询用户是否存在时用）
+func SearchUser(IDNumber, name string) (*User, error) {
+	var result *User
+	status := db.Where("IDNumber = ? AND Name = ?", IDNumber, name).First(result)
 	return result, status.Error
 }
 
