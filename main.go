@@ -7,6 +7,7 @@ import (
 
 	"github.com/amtoaer/fabric-backend/sdk"
 	"github.com/amtoaer/fabric-backend/service"
+	"github.com/amtoaer/fabric-backend/web"
 )
 
 const (
@@ -44,9 +45,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	// TODO: 该处创建的服务应该通过web中间层调用，待实现
 	// 创建服务
 	s := service.NewService(chainCode, channelClient)
+
+	// 对服务进行部分测试
 	s.AddRecord(service.Record{
 		PatientName: "病人1",
 		PatientID:   "1",
@@ -83,4 +85,11 @@ func main() {
 		panic("第三次查询失败")
 	}
 	fmt.Printf("第三次查询结果：%v\n", result)
+
+	// 将服务注入到web包中
+	web.SetService(s)
+	// 拿到组装好的gin路由
+	router := web.NewRouter()
+	// 启用web服务并阻塞
+	router.Run(":8000")
 }
