@@ -83,7 +83,7 @@ func register(c *gin.Context) {
 }
 
 // 添加病历
-// 请求属性 patientName、patientIDNumber、content
+// 请求属性 patientName、patientIDNumber、publicKey、content
 func addRecord(c *gin.Context) {
 	tmp, _ := c.Get("user")
 	user := tmp.(*model.User)
@@ -102,7 +102,11 @@ func addRecord(c *gin.Context) {
 		getError(c, fmt.Errorf("病人信息不符"))
 		return
 	}
-	// BUG:需要先验证签名
+	publicKey := c.Request.FormValue("publicKey")
+	if publicKey != patient.PublicKey {
+		getError(c, fmt.Errorf("公钥内容不符合"))
+		return
+	}
 	content := c.Request.FormValue("content")
 	// 先用医生公钥加密，再用病人公钥加密
 	afterFirstEncrypt, err := security.RsaEncrypt([]byte(content), []byte(user.PublicKey))
@@ -134,7 +138,59 @@ func addRecord(c *gin.Context) {
 }
 
 // 更新病历
-func updateRecord(c *gin.Context) {}
+// 请求属性 patientName、patientIDNumber、publicKey、content
+func updateRecord(c *gin.Context) {
+	tmp, _ := c.Get("user")
+	user := tmp.(*model.User)
+	if !user.Type {
+		getError(c, fmt.Errorf("只有医生才能修改病历"))
+		return
+	}
+	patientName, patientIDNumber := c.Request.FormValue("patientName"), c.Request.FormValue("patientIDNumber")
+	patient, err := model.SearchUser(patientIDNumber, patientName)
+	if err != nil {
+		getError(c, err)
+		return
+	}
+	// 添加时需保证添加请求由医生发起，且病人信息存在
+	if patient.Type == user.Type {
+		getError(c, fmt.Errorf("病人信息不符"))
+		return
+	}
+	publicKey := c.Request.FormValue("publicKey")
+	if publicKey != patient.PublicKey {
+		getError(c, fmt.Errorf("公钥内容不符合"))
+		return
+	}
+	content := c.Request.FormValue("content")
+	// 先用医生公钥加密，再用病人公钥加密
+	afterFirstEncrypt, err := security.RsaEncrypt([]byte(content), []byte(user.PublicKey))
+	if err != nil {
+		getError(c, err)
+		return
+	}
+	afterSecondEncrypt, err := security.RsaEncrypt(afterFirstEncrypt, []byte(patient.PublicKey))
+	if err != nil {
+		getError(c, err)
+		return
+	}
+	transactionID, err := helper.UpdateRecord(service.Record{
+		ObjectType:  "recordObj",
+		PatientID:   patientIDNumber,
+		PatientName: patientName,
+		DoctorID:    user.IDNumber,
+		DoctorName:  user.Name,
+		Content:     string(afterSecondEncrypt),
+	})
+	if err != nil {
+		getError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success":       true,
+		"transactionID": transactionID,
+	})
+}
 
 // 通过医生ID查询病历列表
 // 请求属性 doctorID

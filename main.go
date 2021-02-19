@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path"
 
@@ -47,45 +46,6 @@ func main() {
 	}
 	// 创建服务
 	s := service.NewService(chainCode, channelClient)
-
-	// 对服务进行部分测试
-	s.AddRecord(service.Record{
-		PatientName: "病人1",
-		PatientID:   "1",
-		DoctorName:  "医生1",
-		DoctorID:    "1",
-		Content:     "测试内容1",
-	})
-	s.AddRecord(service.Record{
-		PatientName: "病人1",
-		PatientID:   "1",
-		DoctorName:  "医生2",
-		DoctorID:    "2",
-		Content:     "测试内容2",
-	})
-	s.AddRecord(service.Record{
-		PatientName: "病人2",
-		PatientID:   "2",
-		DoctorName:  "医生1",
-		DoctorID:    "1",
-		Content:     "测试内容3",
-	})
-	result, err := s.QueryRecordByKey("1", "2")
-	if err != nil {
-		panic("第一次查询失败")
-	}
-	fmt.Printf("第一次查询结果：%v\n", result)
-	result, err = s.QueryRecordByDoctorID("1")
-	if err != nil {
-		panic("第二次查询失败")
-	}
-	fmt.Printf("第二次查询结果：%v\n", result)
-	result, err = s.QueryRecordByPatientID("1")
-	if err != nil {
-		panic("第三次查询失败")
-	}
-	fmt.Printf("第三次查询结果：%v\n", result)
-
 	// 将服务注入到web包中
 	web.SetService(s)
 	// 拿到组装好的gin路由

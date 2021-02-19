@@ -7,11 +7,18 @@ import (
 // NewRouter 返回路由
 func NewRouter() *gin.Engine {
 	router := gin.Default()
-	userFunction := router.Group("/api/user")
-	userFunction.POST("/login", login)
-	userFunction.POST("/register", register)
-	otherFunction := router.Group("/api/other", headerAuthorization())
-	otherFunction.POST("/addRecord", addRecord)
-	// TODO: 添加更多功能
+	// 用户功能
+	user := router.Group("/api/user")
+	user.POST("/login", login)
+	user.POST("/register", register)
+	// 搜索功能
+	search := router.Group("/api/search")
+	search.POST("/byDoctorID", searchRecordByDoctorID)
+	search.POST("byPatientID", searchRecordByPatientID)
+	search.POST("byKey", searchRecordByKey)
+	// 修改功能
+	modify := router.Group("/api/modify", headerAuthorization())
+	modify.POST("/addRecord", addRecord)
+	modify.POST("/updateRecord", updateRecord)
 	return router
 }

@@ -29,8 +29,6 @@ func init() {
 	if err != nil {
 		fmt.Printf("数据库连接失败，错误为：%v\n", err)
 	}
-	// FIXME:使用init初始化全局数据库连接，在连接出错时会出现许多意想不到的情况
-	// HELP:没有发现数据库连接的释放函数，需要进一步查阅
 }
 
 // GetUserByID 通过ID获取User（验证token时用）
