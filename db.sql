@@ -1,0 +1,15 @@
+DROP DATABASE IF EXISTS records;
+CREATE DATABASE records;
+USE records;
+-- 创建用户信息表
+CREATE TABLE users(
+    `ID` BIGINT AUTO_INCREMENT NOT NULL,
+    `Name` VARCHAR(10) NOT NULL,
+    `IDNumber` CHAR(18) NOT NULL,
+    `Password` VARCHAR(16) NOT NULL,
+    `TYPE` BOOLEAN NOT NULL,
+    `PrivateKey` VARCHAR(500) NOT NULL,
+    `PublicKey` VARCHAR(200) NOT NULL,
+    UNIQUE (`IDNumber`),
+    PRIMARY KEY(`ID`)
+)
