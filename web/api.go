@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/amtoaer/fabric-backend/model"
@@ -65,16 +66,18 @@ func login(c *gin.Context) {
 }
 
 // 用户注册
-// 请求属性 IDNumber、Password、Name
+// 请求属性 IDNumber、Password、Name、Type
 func register(c *gin.Context) {
 	IDNumber := c.Request.FormValue("IDNumber")
 	password := c.Request.FormValue("Password")
 	name := c.Request.FormValue("Name")
-	if !(checkIDNumber(IDNumber) && checkPassword(password) && checkName(name)) {
+	tmpTyp := c.Request.FormValue("Type")
+	typ, err := strconv.ParseBool(tmpTyp)
+	if !(checkIDNumber(IDNumber) && checkPassword(password) && checkName(name) && err == nil) {
 		getError(c, fmt.Errorf("参数格式有误"))
 		return
 	}
-	user, err := model.InsertUser(IDNumber, password, name)
+	user, err := model.InsertUser(IDNumber, password, name, typ)
 	if err != nil {
 		getError(c, err)
 		return

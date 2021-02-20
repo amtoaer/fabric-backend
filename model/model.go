@@ -53,11 +53,12 @@ func SearchUser(IDNumber, name string) (*User, error) {
 }
 
 // InsertUser 插入新的User（注册时用）
-func InsertUser(IDNumber, password, Name string) (*User, error) {
+func InsertUser(IDNumber, password, Name string, typ bool) (*User, error) {
 	var dataToInsert = &User{
 		IDNumber: IDNumber,
 		Password: password,
 		Name:     Name,
+		Type:     typ,
 	}
 	privateKey, publicKey, err := security.GenerateRsaKey()
 	if err != nil {
