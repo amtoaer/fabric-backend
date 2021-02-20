@@ -7,11 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var isNum, isPassword *regexp.Regexp
+var isNum *regexp.Regexp
 
 func init() {
 	isNum = regexp.MustCompile("^(\\d+)$")
-	isPassword = regexp.MustCompile("^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,16}$")
 }
 
 // 用来生成一个错误
@@ -30,10 +29,15 @@ func checkID(ID string) bool {
 }
 
 func checkPassword(password string) bool {
-	if isPassword.MatchString(password) {
-		return true
+	if len(password) == 0 || len(password) > 16 {
+		return false
 	}
-	return false
+	for i := 0; i < len(password); i++ {
+		if !((password[i] >= '0' && password[i] <= '9') || (password[i] >= 'a' && password[i] <= 'z') || (password[i] >= 'A' && password[i] <= 'Z')) {
+			return false
+		}
+	}
+	return true
 }
 
 func checkName(name string) bool {
