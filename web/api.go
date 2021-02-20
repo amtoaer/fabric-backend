@@ -43,6 +43,10 @@ func headerAuthorization() gin.HandlerFunc {
 func login(c *gin.Context) {
 	ID := c.Request.FormValue("ID")
 	password := c.Request.FormValue("Password")
+	if !(checkID(ID) && checkPassword(password)) {
+		getError(c, fmt.Errorf("参数格式有误"))
+		return
+	}
 	user, err := model.FindUser(ID, password)
 	if err != nil {
 		getError(c, err)
@@ -66,6 +70,10 @@ func register(c *gin.Context) {
 	IDNumber := c.Request.FormValue("IDNumber")
 	password := c.Request.FormValue("Password")
 	name := c.Request.FormValue("Name")
+	if !(checkIDNumber(IDNumber) && checkPassword(password) && checkName(name)) {
+		getError(c, fmt.Errorf("参数格式有误"))
+		return
+	}
 	user, err := model.InsertUser(IDNumber, password, name)
 	if err != nil {
 		getError(c, err)
@@ -93,6 +101,10 @@ func addRecord(c *gin.Context) {
 		return
 	}
 	patientName, patientIDNumber := c.Request.FormValue("patientName"), c.Request.FormValue("patientIDNumber")
+	if !(checkIDNumber(patientIDNumber) && checkName(patientName)) {
+		getError(c, fmt.Errorf("参数格式有误"))
+		return
+	}
 	patient, err := model.SearchUser(patientIDNumber, patientName)
 	if err != nil {
 		getError(c, err)
@@ -148,6 +160,10 @@ func updateRecord(c *gin.Context) {
 		return
 	}
 	patientName, patientIDNumber := c.Request.FormValue("patientName"), c.Request.FormValue("patientIDNumber")
+	if !(checkIDNumber(patientIDNumber) && checkName(patientName)) {
+		getError(c, fmt.Errorf("参数格式有误"))
+		return
+	}
 	patient, err := model.SearchUser(patientIDNumber, patientName)
 	if err != nil {
 		getError(c, err)
@@ -194,10 +210,14 @@ func updateRecord(c *gin.Context) {
 }
 
 // 通过医生ID查询病历列表
-// 请求属性 doctorID
+// 请求属性 doctorIDNumber
 func searchRecordByDoctorID(c *gin.Context) {
-	doctorID := c.Request.FormValue("doctorID")
-	result, err := helper.QueryRecordByDoctorID(doctorID)
+	doctorIDNumber := c.Request.FormValue("doctorIDNumber")
+	if !(checkIDNumber(doctorIDNumber)) {
+		getError(c, fmt.Errorf("参数格式有误"))
+		return
+	}
+	result, err := helper.QueryRecordByDoctorID(doctorIDNumber)
 	if err != nil {
 		getError(c, err)
 		return
@@ -208,11 +228,15 @@ func searchRecordByDoctorID(c *gin.Context) {
 	})
 }
 
-// 通过病人ID查询病历列表
-// 请求属性 patientID
+// 通过病人IDNumber查询病历列表
+// 请求属性 patientIDNumber
 func searchRecordByPatientID(c *gin.Context) {
-	patientID := c.Request.FormValue("patientID")
-	result, err := helper.QueryRecordByPatientID(patientID)
+	patientIDNumber := c.Request.FormValue("patientIDNumber")
+	if !(checkIDNumber(patientIDNumber)) {
+		getError(c, fmt.Errorf("参数格式有误"))
+		return
+	}
+	result, err := helper.QueryRecordByPatientID(patientIDNumber)
 	if err != nil {
 		getError(c, err)
 		return
@@ -223,18 +247,22 @@ func searchRecordByPatientID(c *gin.Context) {
 	})
 }
 
-// 通过病人ID和医生ID及两者私钥得到病历详情
-// 请求属性 ID、privateKey、name
+// 通过病人IDNumber和医生IDNumber及两者私钥得到病历详情
+// 请求属性 IDNumber、privateKey、name
 func searchRecordByKey(c *gin.Context) {
 	var doctorKey, patientKey string
 	// 获取请求发起人
 	tmp, _ := c.Get("user")
 	firstUser := tmp.(*model.User)
-	// 拿到请求参数中的ID和name
-	ID := c.Request.FormValue("ID")
+	// 拿到请求参数中的IDNumber和name
+	IDNumber := c.Request.FormValue("IDNumber")
 	name := c.Request.FormValue("name")
+	if !(checkIDNumber(IDNumber) && checkName(name)) {
+		getError(c, fmt.Errorf("参数格式有误"))
+		return
+	}
 	// 获取到另一个人的信息
-	secondUser, err := model.SearchUser(ID, name)
+	secondUser, err := model.SearchUser(IDNumber, name)
 	if err != nil {
 		getError(c, err)
 		return
