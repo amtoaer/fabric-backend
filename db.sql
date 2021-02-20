@@ -12,4 +12,4 @@ CREATE TABLE users(
     `PublicKey` VARCHAR(200) NOT NULL,
     UNIQUE (`IDNumber`),
     PRIMARY KEY(`ID`)
-)
+) CHARSET = UTF8MB4;
