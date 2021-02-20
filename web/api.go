@@ -25,15 +25,16 @@ func headerAuthorization() gin.HandlerFunc {
 		token := c.Request.Header.Get("Authorization")
 		if token == "" {
 			getError(c, fmt.Errorf("您访问的功能需要登录！"))
+			c.Abort()
 			return
 		}
 		user, err := parseToken(token)
 		if err != nil {
 			getError(c, err)
+			c.Abort()
 			return
 		}
 		c.Set("user", user)
-		c.Next()
 	}
 }
 

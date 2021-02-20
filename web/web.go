@@ -17,7 +17,8 @@ func NewRouter() *gin.Engine {
 	search.POST("byPatientID", searchRecordByPatientID)
 	search.POST("byKey", searchRecordByKey)
 	// 修改功能
-	modify := router.Group("/api/modify", headerAuthorization())
+	modify := router.Group("/api/modify")
+	modify.Use(headerAuthorization())
 	modify.POST("/addRecord", addRecord)
 	modify.POST("/updateRecord", updateRecord)
 	return router

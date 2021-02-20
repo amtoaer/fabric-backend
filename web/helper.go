@@ -10,6 +10,6 @@ import (
 func getError(c *gin.Context, err error) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": false,
-		"message": err,
+		"message": err.Error(),
 	})
 }
