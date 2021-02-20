@@ -3,13 +3,13 @@ CREATE DATABASE records;
 USE records;
 -- 创建用户信息表
 CREATE TABLE users(
-    `ID` BIGINT AUTO_INCREMENT NOT NULL,
-    `Name` VARCHAR(10) NOT NULL,
-    `IDNumber` CHAR(18) NOT NULL,
-    `Password` VARCHAR(16) NOT NULL,
-    `TYPE` BOOLEAN NOT NULL,
-    `PrivateKey` VARCHAR(500) NOT NULL,
-    `PublicKey` VARCHAR(200) NOT NULL,
-    UNIQUE (`IDNumber`),
-    PRIMARY KEY(`ID`)
+    `id` BIGINT AUTO_INCREMENT NOT NULL,
+    `name` VARCHAR(10) NOT NULL,
+    `id_number` CHAR(18) NOT NULL,
+    `password` VARCHAR(16) NOT NULL,
+    `type` BOOLEAN NOT NULL,
+    `private_key` VARCHAR(500) NOT NULL,
+    `public_key` VARCHAR(200) NOT NULL,
+    UNIQUE (`id_number`),
+    PRIMARY KEY(`id`)
 ) CHARSET = UTF8MB4;
