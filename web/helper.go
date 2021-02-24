@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"regexp"
 
@@ -14,11 +15,16 @@ func init() {
 }
 
 // 用来生成一个错误
-func getError(c *gin.Context, err error) {
+func getError(c *gin.Context, err error, message string) {
+	// 返回给用户看的错误
 	c.JSON(http.StatusOK, gin.H{
 		"success": false,
-		"message": err.Error(),
+		"message": message,
 	})
+	// 控制台内输出错误详情
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func checkID(ID string) bool {

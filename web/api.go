@@ -2,7 +2,6 @@ package web
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -25,13 +24,13 @@ func headerAuthorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.Request.Header.Get("Authorization")
 		if token == "" {
-			getError(c, fmt.Errorf("您访问的功能需要登录！"))
+			getError(c, nil, "您访问的功能需要登录")
 			c.Abort()
 			return
 		}
 		user, err := parseToken(token)
 		if err != nil {
-			getError(c, err)
+			getError(c, err, "身份信息失效，请重新登录")
 			c.Abort()
 			return
 		}
@@ -45,17 +44,17 @@ func login(c *gin.Context) {
 	ID := c.Request.FormValue("ID")
 	password := c.Request.FormValue("Password")
 	if !(checkID(ID) && checkPassword(password)) {
-		getError(c, fmt.Errorf("参数格式有误"))
+		getError(c, nil, "参数格式有误")
 		return
 	}
 	user, err := model.FindUser(ID, password)
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "账户不存在，请重试")
 		return
 	}
 	token, err := generateToken(user.ID, time.Hour*72)
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "生成身份凭证失败，请重试")
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -74,17 +73,17 @@ func register(c *gin.Context) {
 	tmpTyp := c.Request.FormValue("Type")
 	typ, err := strconv.ParseBool(tmpTyp)
 	if !(checkIDNumber(IDNumber) && checkPassword(password) && checkName(name) && err == nil) {
-		getError(c, fmt.Errorf("参数格式有误"))
+		getError(c, nil, "参数格式有误")
 		return
 	}
 	user, err := model.InsertUser(IDNumber, password, name, typ)
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "注册用户失败，请重试")
 		return
 	}
 	token, err := generateToken(user.ID, time.Hour*72)
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "生成身份凭证失败，请重试")
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -100,39 +99,39 @@ func addRecord(c *gin.Context) {
 	tmp, _ := c.Get("user")
 	user := tmp.(*model.User)
 	if !user.Type {
-		getError(c, fmt.Errorf("只有医生才能添加病历"))
+		getError(c, nil, "只有医生才能添加病历")
 		return
 	}
 	patientName, patientIDNumber := c.Request.FormValue("patientName"), c.Request.FormValue("patientIDNumber")
 	if !(checkIDNumber(patientIDNumber) && checkName(patientName)) {
-		getError(c, fmt.Errorf("参数格式有误"))
+		getError(c, nil, "参数格式有误")
 		return
 	}
 	patient, err := model.SearchUser(patientIDNumber, patientName)
 	if err != nil {
-		getError(c, err)
+		getError(c, nil, "未找到病人信息")
 		return
 	}
 	// 添加时需保证添加请求由医生发起，且病人信息存在
 	if patient.Type == user.Type {
-		getError(c, fmt.Errorf("病人信息不符"))
+		getError(c, nil, "未找到病人信息")
 		return
 	}
 	publicKey := c.Request.FormValue("publicKey")
 	if publicKey != patient.PublicKey {
-		getError(c, fmt.Errorf("公钥内容不符合"))
+		getError(c, nil, "公钥内容不符合")
 		return
 	}
 	content := c.Request.FormValue("content")
 	// 先用医生公钥加密，再用病人公钥加密
 	afterFirstEncrypt, err := security.RsaEncrypt([]byte(content), []byte(user.PublicKey))
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "使用医生公钥加密信息失败")
 		return
 	}
 	afterSecondEncrypt, err := security.RsaEncrypt(afterFirstEncrypt, []byte(patient.PublicKey))
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "使用病人公钥加密信息失败")
 		return
 	}
 	transactionID, err := helper.AddRecord(service.Record{
@@ -144,7 +143,7 @@ func addRecord(c *gin.Context) {
 		Content:     string(afterSecondEncrypt),
 	})
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "添加病历失败，请重试")
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -159,39 +158,39 @@ func updateRecord(c *gin.Context) {
 	tmp, _ := c.Get("user")
 	user := tmp.(*model.User)
 	if !user.Type {
-		getError(c, fmt.Errorf("只有医生才能修改病历"))
+		getError(c, nil, "只有医生才能修改病历")
 		return
 	}
 	patientName, patientIDNumber := c.Request.FormValue("patientName"), c.Request.FormValue("patientIDNumber")
 	if !(checkIDNumber(patientIDNumber) && checkName(patientName)) {
-		getError(c, fmt.Errorf("参数格式有误"))
+		getError(c, nil, "参数格式有误")
 		return
 	}
 	patient, err := model.SearchUser(patientIDNumber, patientName)
 	if err != nil {
-		getError(c, err)
+		getError(c, nil, "未找到病人信息")
 		return
 	}
 	// 添加时需保证添加请求由医生发起，且病人信息存在
 	if patient.Type == user.Type {
-		getError(c, fmt.Errorf("病人信息不符"))
+		getError(c, nil, "未找到病人信息")
 		return
 	}
 	publicKey := c.Request.FormValue("publicKey")
 	if publicKey != patient.PublicKey {
-		getError(c, fmt.Errorf("公钥内容不符合"))
+		getError(c, nil, "公钥内容不符合")
 		return
 	}
 	content := c.Request.FormValue("content")
 	// 先用医生公钥加密，再用病人公钥加密
 	afterFirstEncrypt, err := security.RsaEncrypt([]byte(content), []byte(user.PublicKey))
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "使用医生公钥加密信息失败")
 		return
 	}
 	afterSecondEncrypt, err := security.RsaEncrypt(afterFirstEncrypt, []byte(patient.PublicKey))
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "使用病人公钥加密信息失败")
 		return
 	}
 	transactionID, err := helper.UpdateRecord(service.Record{
@@ -203,7 +202,7 @@ func updateRecord(c *gin.Context) {
 		Content:     string(afterSecondEncrypt),
 	})
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "更新病历失败，请重试")
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -217,12 +216,12 @@ func updateRecord(c *gin.Context) {
 func searchRecordByDoctorID(c *gin.Context) {
 	doctorIDNumber := c.Request.FormValue("doctorIDNumber")
 	if !(checkIDNumber(doctorIDNumber)) {
-		getError(c, fmt.Errorf("参数格式有误"))
+		getError(c, nil, "参数格式有误")
 		return
 	}
 	result, err := helper.QueryRecordByDoctorID(doctorIDNumber)
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "查询失败，请重试")
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -236,12 +235,12 @@ func searchRecordByDoctorID(c *gin.Context) {
 func searchRecordByPatientID(c *gin.Context) {
 	patientIDNumber := c.Request.FormValue("patientIDNumber")
 	if !(checkIDNumber(patientIDNumber)) {
-		getError(c, fmt.Errorf("参数格式有误"))
+		getError(c, nil, "参数格式有误")
 		return
 	}
 	result, err := helper.QueryRecordByPatientID(patientIDNumber)
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "查询失败，请重试")
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -261,18 +260,18 @@ func searchRecordByKey(c *gin.Context) {
 	IDNumber := c.Request.FormValue("IDNumber")
 	name := c.Request.FormValue("name")
 	if !(checkIDNumber(IDNumber) && checkName(name)) {
-		getError(c, fmt.Errorf("参数格式有误"))
+		getError(c, nil, "参数格式有误")
 		return
 	}
 	// 获取到另一个人的信息
 	secondUser, err := model.SearchUser(IDNumber, name)
 	if err != nil {
-		getError(c, err)
+		getError(c, nil, "获取对方身份信息失败")
 		return
 	}
 	privateKey := c.Request.FormValue("privateKey")
 	if privateKey != secondUser.PrivateKey {
-		getError(c, fmt.Errorf("私钥内容不符合"))
+		getError(c, nil, "私钥内容不符合")
 		return
 	}
 	var tmpResult string
@@ -285,24 +284,24 @@ func searchRecordByKey(c *gin.Context) {
 		patientKey, doctorKey = firstUser.PrivateKey, secondUser.PrivateKey
 	}
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "查询病历信息失败")
 		return
 	}
 	var result *service.Record
 	err = json.Unmarshal([]byte(tmpResult), result)
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "解析病历信息失败")
 		return
 	}
 	// 先用病人私钥解密，再用医生私钥解密
 	afterFirstDecrypt, err := security.RsaDecrypt([]byte(result.Content), []byte(patientKey))
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "使用病人私钥解密信息失败")
 		return
 	}
 	afterSecondDecrypt, err := security.RsaDecrypt(afterFirstDecrypt, []byte(doctorKey))
 	if err != nil {
-		getError(c, err)
+		getError(c, err, "使用医生私钥解密信息失败")
 		return
 	}
 	result.Content = string(afterSecondDecrypt)
