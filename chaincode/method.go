@@ -52,6 +52,7 @@ func getRecordsByQueryString(stub shim.ChaincodeStubInterface, queryString strin
 	}
 	defer resultIterator.Close()
 	var buf bytes.Buffer
+	buf.WriteString("[")
 	flag := false
 	for resultIterator.HasNext() {
 		resp, err := resultIterator.Next()
@@ -64,6 +65,7 @@ func getRecordsByQueryString(stub shim.ChaincodeStubInterface, queryString strin
 		buf.Write(resp.Value)
 		flag = true
 	}
+	buf.WriteString("]")
 	return buf.Bytes(), nil
 }
 
