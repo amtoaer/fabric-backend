@@ -1,12 +1,18 @@
 package web
 
 import (
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 )
 
 // NewRouter 返回路由
 func NewRouter() *gin.Engine {
+	staticFS := getFileSystem()
 	router := gin.Default()
+	router.Use(static.Serve("/", staticFS))
+	router.NoRoute(func(c *gin.Context) {
+		c.FileFromFS("/index.html", staticFS)
+	})
 	// 用户功能
 	user := router.Group("/api/user")
 	user.POST("/login", login)
