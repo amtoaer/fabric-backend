@@ -3,7 +3,6 @@ package web
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/amtoaer/fabric-backend/model"
@@ -11,6 +10,20 @@ import (
 	"github.com/amtoaer/fabric-backend/service"
 	"github.com/gin-gonic/gin"
 )
+
+type param struct {
+	ID              string
+	Password        string
+	IDNumber        string
+	Name            string
+	Type            bool
+	patientName     string
+	patientIDNumber string
+	publicKey       string
+	content         string
+	doctorIDNumber  string
+	privateKey      string
+}
 
 var helper service.Service
 
@@ -41,15 +54,20 @@ func headerAuthorization() gin.HandlerFunc {
 // 用户登录
 // 请求属性 ID、Password
 func login(c *gin.Context) {
-	ID := c.Request.FormValue("ID")
-	password := c.Request.FormValue("Password")
-	if !(checkID(ID) && checkPassword(password)) {
+	var params param
+	if c.Bind(&params) != nil {
 		getError(c, nil, "参数格式有误")
+		return
+	}
+	ID := params.ID
+	password := params.Password
+	if !(checkID(ID) && checkPassword(password)) {
+		getError(c, nil, "参数内容有误")
 		return
 	}
 	user, err := model.FindUser(ID, password)
 	if err != nil {
-		getError(c, err, "账户不存在，请重试")
+		getError(c, err, "账户不存在或密码错误，请重试")
 		return
 	}
 	token, err := generateToken(user.ID, time.Hour*72)
@@ -67,13 +85,17 @@ func login(c *gin.Context) {
 // 用户注册
 // 请求属性 IDNumber、Password、Name、Type
 func register(c *gin.Context) {
-	IDNumber := c.Request.FormValue("IDNumber")
-	password := c.Request.FormValue("Password")
-	name := c.Request.FormValue("Name")
-	tmpTyp := c.Request.FormValue("Type")
-	typ, err := strconv.ParseBool(tmpTyp)
-	if !(checkIDNumber(IDNumber) && checkPassword(password) && checkName(name) && err == nil) {
+	var params param
+	if c.Bind(&params) != nil {
 		getError(c, nil, "参数格式有误")
+		return
+	}
+	IDNumber := params.IDNumber
+	password := params.Password
+	name := params.Name
+	typ := params.Type
+	if !(checkIDNumber(IDNumber) && checkPassword(password) && checkName(name)) {
+		getError(c, nil, "参数内容有误")
 		return
 	}
 	user, err := model.InsertUser(IDNumber, password, name, typ)
@@ -96,15 +118,20 @@ func register(c *gin.Context) {
 // 添加病历
 // 请求属性 patientName、patientIDNumber、publicKey、content
 func addRecord(c *gin.Context) {
+	var params param
+	if c.Bind(&params) != nil {
+		getError(c, nil, "参数格式有误")
+		return
+	}
 	tmp, _ := c.Get("user")
 	user := tmp.(*model.User)
 	if !user.Type {
 		getError(c, nil, "只有医生才能添加病历")
 		return
 	}
-	patientName, patientIDNumber := c.Request.FormValue("patientName"), c.Request.FormValue("patientIDNumber")
+	patientName, patientIDNumber := params.patientName, params.patientIDNumber
 	if !(checkIDNumber(patientIDNumber) && checkName(patientName)) {
-		getError(c, nil, "参数格式有误")
+		getError(c, nil, "参数内容有误")
 		return
 	}
 	patient, err := model.SearchUser(patientIDNumber, patientName)
@@ -117,12 +144,12 @@ func addRecord(c *gin.Context) {
 		getError(c, nil, "未找到病人信息")
 		return
 	}
-	publicKey := c.Request.FormValue("publicKey")
+	publicKey := params.publicKey
 	if publicKey != patient.PublicKey {
 		getError(c, nil, "公钥内容不符合")
 		return
 	}
-	content := c.Request.FormValue("content")
+	content := params.content
 	// 先用医生公钥加密，再用病人公钥加密
 	afterFirstEncrypt, err := security.RsaEncrypt([]byte(content), []byte(user.PublicKey))
 	if err != nil {
@@ -155,15 +182,20 @@ func addRecord(c *gin.Context) {
 // 更新病历
 // 请求属性 patientName、patientIDNumber、publicKey、content
 func updateRecord(c *gin.Context) {
+	var params param
+	if c.Bind(&params) != nil {
+		getError(c, nil, "参数格式有误")
+		return
+	}
 	tmp, _ := c.Get("user")
 	user := tmp.(*model.User)
 	if !user.Type {
 		getError(c, nil, "只有医生才能修改病历")
 		return
 	}
-	patientName, patientIDNumber := c.Request.FormValue("patientName"), c.Request.FormValue("patientIDNumber")
+	patientName, patientIDNumber := params.patientName, params.patientIDNumber
 	if !(checkIDNumber(patientIDNumber) && checkName(patientName)) {
-		getError(c, nil, "参数格式有误")
+		getError(c, nil, "参数内容有误")
 		return
 	}
 	patient, err := model.SearchUser(patientIDNumber, patientName)
@@ -176,12 +208,12 @@ func updateRecord(c *gin.Context) {
 		getError(c, nil, "未找到病人信息")
 		return
 	}
-	publicKey := c.Request.FormValue("publicKey")
+	publicKey := params.publicKey
 	if publicKey != patient.PublicKey {
 		getError(c, nil, "公钥内容不符合")
 		return
 	}
-	content := c.Request.FormValue("content")
+	content := params.content
 	// 先用医生公钥加密，再用病人公钥加密
 	afterFirstEncrypt, err := security.RsaEncrypt([]byte(content), []byte(user.PublicKey))
 	if err != nil {
@@ -214,9 +246,14 @@ func updateRecord(c *gin.Context) {
 // 通过医生ID查询病历列表
 // 请求属性 doctorIDNumber
 func searchRecordByDoctorID(c *gin.Context) {
-	doctorIDNumber := c.Request.FormValue("doctorIDNumber")
-	if !(checkIDNumber(doctorIDNumber)) {
+	var params param
+	if c.Bind(&params) != nil {
 		getError(c, nil, "参数格式有误")
+		return
+	}
+	doctorIDNumber := params.doctorIDNumber
+	if !(checkIDNumber(doctorIDNumber)) {
+		getError(c, nil, "参数内容有误")
 		return
 	}
 	result, err := helper.QueryRecordByDoctorID(doctorIDNumber)
@@ -233,9 +270,14 @@ func searchRecordByDoctorID(c *gin.Context) {
 // 通过病人IDNumber查询病历列表
 // 请求属性 patientIDNumber
 func searchRecordByPatientID(c *gin.Context) {
-	patientIDNumber := c.Request.FormValue("patientIDNumber")
-	if !(checkIDNumber(patientIDNumber)) {
+	var params param
+	if c.Bind(&params) != nil {
 		getError(c, nil, "参数格式有误")
+		return
+	}
+	patientIDNumber := params.patientIDNumber
+	if !(checkIDNumber(patientIDNumber)) {
+		getError(c, nil, "参数内容有误")
 		return
 	}
 	result, err := helper.QueryRecordByPatientID(patientIDNumber)
@@ -250,17 +292,22 @@ func searchRecordByPatientID(c *gin.Context) {
 }
 
 // 通过病人IDNumber和医生IDNumber及两者私钥得到病历详情
-// 请求属性 IDNumber、privateKey、name
+// 请求属性 IDNumber、privateKey、Name
 func searchRecordByKey(c *gin.Context) {
+	var params param
+	if c.Bind(&params) != nil {
+		getError(c, nil, "参数格式有误")
+		return
+	}
 	var doctorKey, patientKey string
 	// 获取请求发起人
 	tmp, _ := c.Get("user")
 	firstUser := tmp.(*model.User)
 	// 拿到请求参数中的IDNumber和name
-	IDNumber := c.Request.FormValue("IDNumber")
-	name := c.Request.FormValue("name")
+	IDNumber := params.IDNumber
+	name := params.Name
 	if !(checkIDNumber(IDNumber) && checkName(name)) {
-		getError(c, nil, "参数格式有误")
+		getError(c, nil, "参数内容有误")
 		return
 	}
 	// 获取到另一个人的信息
@@ -269,7 +316,7 @@ func searchRecordByKey(c *gin.Context) {
 		getError(c, nil, "获取对方身份信息失败")
 		return
 	}
-	privateKey := c.Request.FormValue("privateKey")
+	privateKey := params.privateKey
 	if privateKey != secondUser.PrivateKey {
 		getError(c, nil, "私钥内容不符合")
 		return
