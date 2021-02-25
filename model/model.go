@@ -45,10 +45,10 @@ func FindUser(ID, password string) (*User, error) {
 	return result, status.Error
 }
 
-// SearchUser 通过身份证号和姓名获取User（查询用户是否存在时用）
-func SearchUser(IDNumber, name string) (*User, error) {
+// SearchUser 通过身份证号获取User（查询用户是否存在时用）
+func SearchUser(IDNumber string) (*User, error) {
 	var result *User
-	status := db.Where("IDNumber = ? AND Name = ?", IDNumber, name).First(result)
+	status := db.Where("IDNumber = ?", IDNumber).First(result)
 	return result, status.Error
 }
 

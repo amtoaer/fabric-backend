@@ -13,16 +13,15 @@ import (
 
 type param struct {
 	ID              string
-	Password        string
-	IDNumber        string
 	Name            string
+	IDNumber        string
 	Type            bool
-	patientName     string
+	Password        string
 	patientIDNumber string
-	publicKey       string
-	content         string
 	doctorIDNumber  string
+	publicKey       string
 	privateKey      string
+	content         string
 }
 
 var helper service.Service
@@ -116,7 +115,7 @@ func register(c *gin.Context) {
 }
 
 // 添加病历
-// 请求属性 patientName、patientIDNumber、publicKey、content
+// 请求属性 patientIDNumber、publicKey、content
 func addRecord(c *gin.Context) {
 	var params param
 	if c.Bind(&params) != nil {
@@ -129,12 +128,12 @@ func addRecord(c *gin.Context) {
 		getError(c, nil, "只有医生才能添加病历")
 		return
 	}
-	patientName, patientIDNumber := params.patientName, params.patientIDNumber
-	if !(checkIDNumber(patientIDNumber) && checkName(patientName)) {
+	patientIDNumber := params.patientIDNumber
+	if !checkIDNumber(patientIDNumber) {
 		getError(c, nil, "参数内容有误")
 		return
 	}
-	patient, err := model.SearchUser(patientIDNumber, patientName)
+	patient, err := model.SearchUser(patientIDNumber)
 	if err != nil {
 		getError(c, nil, "未找到病人信息")
 		return
@@ -163,8 +162,8 @@ func addRecord(c *gin.Context) {
 	}
 	transactionID, err := helper.AddRecord(service.Record{
 		ObjectType:  "recordObj",
-		PatientID:   patientIDNumber,
-		PatientName: patientName,
+		PatientID:   patient.IDNumber,
+		PatientName: patient.Name,
 		DoctorID:    user.IDNumber,
 		DoctorName:  user.Name,
 		Content:     string(afterSecondEncrypt),
@@ -180,7 +179,7 @@ func addRecord(c *gin.Context) {
 }
 
 // 更新病历
-// 请求属性 patientName、patientIDNumber、publicKey、content
+// 请求属性 patientIDNumber、publicKey、content
 func updateRecord(c *gin.Context) {
 	var params param
 	if c.Bind(&params) != nil {
@@ -193,12 +192,12 @@ func updateRecord(c *gin.Context) {
 		getError(c, nil, "只有医生才能修改病历")
 		return
 	}
-	patientName, patientIDNumber := params.patientName, params.patientIDNumber
-	if !(checkIDNumber(patientIDNumber) && checkName(patientName)) {
+	patientIDNumber := params.patientIDNumber
+	if !checkIDNumber(patientIDNumber) {
 		getError(c, nil, "参数内容有误")
 		return
 	}
-	patient, err := model.SearchUser(patientIDNumber, patientName)
+	patient, err := model.SearchUser(patientIDNumber)
 	if err != nil {
 		getError(c, nil, "未找到病人信息")
 		return
@@ -227,8 +226,8 @@ func updateRecord(c *gin.Context) {
 	}
 	transactionID, err := helper.UpdateRecord(service.Record{
 		ObjectType:  "recordObj",
-		PatientID:   patientIDNumber,
-		PatientName: patientName,
+		PatientID:   patient.IDNumber,
+		PatientName: patient.Name,
 		DoctorID:    user.IDNumber,
 		DoctorName:  user.Name,
 		Content:     string(afterSecondEncrypt),
@@ -292,7 +291,7 @@ func searchRecordByPatientID(c *gin.Context) {
 }
 
 // 通过病人IDNumber和医生IDNumber及两者私钥得到病历详情
-// 请求属性 IDNumber、privateKey、Name
+// 请求属性 IDNumber、privateKey
 func searchRecordByKey(c *gin.Context) {
 	var params param
 	if c.Bind(&params) != nil {
@@ -303,15 +302,14 @@ func searchRecordByKey(c *gin.Context) {
 	// 获取请求发起人
 	tmp, _ := c.Get("user")
 	firstUser := tmp.(*model.User)
-	// 拿到请求参数中的IDNumber和name
+	// 拿到请求参数中的IDNumber
 	IDNumber := params.IDNumber
-	name := params.Name
-	if !(checkIDNumber(IDNumber) && checkName(name)) {
+	if !checkIDNumber(IDNumber) {
 		getError(c, nil, "参数内容有误")
 		return
 	}
 	// 获取到另一个人的信息
-	secondUser, err := model.SearchUser(IDNumber, name)
+	secondUser, err := model.SearchUser(IDNumber)
 	if err != nil {
 		getError(c, nil, "获取对方身份信息失败")
 		return
