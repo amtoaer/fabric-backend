@@ -33,22 +33,22 @@ func init() {
 
 // GetUserByID 通过ID获取User（验证token时用）
 func GetUserByID(ID uint) (*User, error) {
-	var result *User
+	result := &User{}
 	status := db.First(result, ID)
 	return result, status.Error
 }
 
 // FindUser 通过用户编号和密码获取User（登录时用）
 func FindUser(ID, password string) (*User, error) {
-	var result *User
-	status := db.Where("ID = ? AND Password = ?", ID, password).First(result)
+	result := &User{}
+	status := db.Where("id = ? AND password = ?", ID, password).First(result)
 	return result, status.Error
 }
 
 // SearchUser 通过身份证号获取User（查询用户是否存在时用）
 func SearchUser(IDNumber string) (*User, error) {
-	var result *User
-	status := db.Where("IDNumber = ?", IDNumber).First(result)
+	result := &User{}
+	status := db.Where("id_number = ?", IDNumber).First(result)
 	return result, status.Error
 }
 
