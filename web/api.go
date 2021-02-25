@@ -17,11 +17,11 @@ type param struct {
 	IDNumber        string
 	Type            bool
 	Password        string
-	patientIDNumber string
-	doctorIDNumber  string
-	publicKey       string
-	privateKey      string
-	content         string
+	PatientIDNumber string
+	DoctorIDNumber  string
+	PublicKey       string
+	PrivateKey      string
+	Content         string
 }
 
 var helper service.Service
@@ -115,7 +115,7 @@ func register(c *gin.Context) {
 }
 
 // 添加病历
-// 请求属性 patientIDNumber、publicKey、content
+// 请求属性 PatientIDNumber、PublicKey、Content
 func addRecord(c *gin.Context) {
 	var params param
 	if c.Bind(&params) != nil {
@@ -128,12 +128,12 @@ func addRecord(c *gin.Context) {
 		getError(c, nil, "只有医生才能添加病历")
 		return
 	}
-	patientIDNumber := params.patientIDNumber
-	if !checkIDNumber(patientIDNumber) {
+	PatientIDNumber := params.PatientIDNumber
+	if !checkIDNumber(PatientIDNumber) {
 		getError(c, nil, "参数内容有误")
 		return
 	}
-	patient, err := model.SearchUser(patientIDNumber)
+	patient, err := model.SearchUser(PatientIDNumber)
 	if err != nil {
 		getError(c, nil, "未找到病人信息")
 		return
@@ -143,14 +143,14 @@ func addRecord(c *gin.Context) {
 		getError(c, nil, "未找到病人信息")
 		return
 	}
-	publicKey := params.publicKey
-	if publicKey != patient.PublicKey {
+	PublicKey := params.PublicKey
+	if PublicKey != patient.PublicKey {
 		getError(c, nil, "公钥内容不符合")
 		return
 	}
-	content := params.content
+	Content := params.Content
 	// 先用医生公钥加密，再用病人公钥加密
-	afterFirstEncrypt, err := security.RsaEncrypt([]byte(content), []byte(user.PublicKey))
+	afterFirstEncrypt, err := security.RsaEncrypt([]byte(Content), []byte(user.PublicKey))
 	if err != nil {
 		getError(c, err, "使用医生公钥加密信息失败")
 		return
@@ -179,7 +179,7 @@ func addRecord(c *gin.Context) {
 }
 
 // 更新病历
-// 请求属性 patientIDNumber、publicKey、content
+// 请求属性 PatientIDNumber、PublicKey、Content
 func updateRecord(c *gin.Context) {
 	var params param
 	if c.Bind(&params) != nil {
@@ -192,12 +192,12 @@ func updateRecord(c *gin.Context) {
 		getError(c, nil, "只有医生才能修改病历")
 		return
 	}
-	patientIDNumber := params.patientIDNumber
-	if !checkIDNumber(patientIDNumber) {
+	PatientIDNumber := params.PatientIDNumber
+	if !checkIDNumber(PatientIDNumber) {
 		getError(c, nil, "参数内容有误")
 		return
 	}
-	patient, err := model.SearchUser(patientIDNumber)
+	patient, err := model.SearchUser(PatientIDNumber)
 	if err != nil {
 		getError(c, nil, "未找到病人信息")
 		return
@@ -207,14 +207,14 @@ func updateRecord(c *gin.Context) {
 		getError(c, nil, "未找到病人信息")
 		return
 	}
-	publicKey := params.publicKey
-	if publicKey != patient.PublicKey {
+	PublicKey := params.PublicKey
+	if PublicKey != patient.PublicKey {
 		getError(c, nil, "公钥内容不符合")
 		return
 	}
-	content := params.content
+	Content := params.Content
 	// 先用医生公钥加密，再用病人公钥加密
-	afterFirstEncrypt, err := security.RsaEncrypt([]byte(content), []byte(user.PublicKey))
+	afterFirstEncrypt, err := security.RsaEncrypt([]byte(Content), []byte(user.PublicKey))
 	if err != nil {
 		getError(c, err, "使用医生公钥加密信息失败")
 		return
@@ -243,19 +243,19 @@ func updateRecord(c *gin.Context) {
 }
 
 // 通过医生ID查询病历列表
-// 请求属性 doctorIDNumber
+// 请求属性 DoctorIDNumber
 func searchRecordByDoctorID(c *gin.Context) {
 	var params param
 	if c.Bind(&params) != nil {
 		getError(c, nil, "参数格式有误")
 		return
 	}
-	doctorIDNumber := params.doctorIDNumber
-	if !(checkIDNumber(doctorIDNumber)) {
+	DoctorIDNumber := params.DoctorIDNumber
+	if !(checkIDNumber(DoctorIDNumber)) {
 		getError(c, nil, "参数内容有误")
 		return
 	}
-	result, err := helper.QueryRecordByDoctorID(doctorIDNumber)
+	result, err := helper.QueryRecordByDoctorID(DoctorIDNumber)
 	if err != nil {
 		getError(c, err, "查询失败，请重试")
 		return
@@ -267,19 +267,19 @@ func searchRecordByDoctorID(c *gin.Context) {
 }
 
 // 通过病人IDNumber查询病历列表
-// 请求属性 patientIDNumber
+// 请求属性 PatientIDNumber
 func searchRecordByPatientID(c *gin.Context) {
 	var params param
 	if c.Bind(&params) != nil {
 		getError(c, nil, "参数格式有误")
 		return
 	}
-	patientIDNumber := params.patientIDNumber
-	if !(checkIDNumber(patientIDNumber)) {
+	PatientIDNumber := params.PatientIDNumber
+	if !(checkIDNumber(PatientIDNumber)) {
 		getError(c, nil, "参数内容有误")
 		return
 	}
-	result, err := helper.QueryRecordByPatientID(patientIDNumber)
+	result, err := helper.QueryRecordByPatientID(PatientIDNumber)
 	if err != nil {
 		getError(c, err, "查询失败，请重试")
 		return
@@ -291,7 +291,7 @@ func searchRecordByPatientID(c *gin.Context) {
 }
 
 // 通过病人IDNumber和医生IDNumber及两者私钥得到病历详情
-// 请求属性 IDNumber、privateKey
+// 请求属性 IDNumber、PrivateKey
 func searchRecordByKey(c *gin.Context) {
 	var params param
 	if c.Bind(&params) != nil {
@@ -314,8 +314,8 @@ func searchRecordByKey(c *gin.Context) {
 		getError(c, nil, "获取对方身份信息失败")
 		return
 	}
-	privateKey := params.privateKey
-	if privateKey != secondUser.PrivateKey {
+	PrivateKey := params.PrivateKey
+	if PrivateKey != secondUser.PrivateKey {
 		getError(c, nil, "私钥内容不符合")
 		return
 	}
