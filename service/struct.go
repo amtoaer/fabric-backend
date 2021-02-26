@@ -4,13 +4,14 @@ import "github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 
 // Record 电子病历结构体（demo）
 type Record struct {
-	ObjectType  string
-	PatientName string
-	PatientID   string
-	DoctorName  string
-	DoctorID    string
-	Content     string
-	Historys    []HistoryItem
+	ObjectType     string
+	PatientName    string
+	PatientID      string
+	DoctorName     string
+	DoctorID       string
+	ContentEncrypt []byte
+	Content        string
+	Historys       []HistoryItem
 }
 
 // HistoryItem 电子病历历史结构体

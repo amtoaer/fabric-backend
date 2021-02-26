@@ -161,12 +161,12 @@ func addRecord(c *gin.Context) {
 		return
 	}
 	transactionID, err := helper.AddRecord(service.Record{
-		ObjectType:  "recordObj",
-		PatientID:   patient.IDNumber,
-		PatientName: patient.Name,
-		DoctorID:    user.IDNumber,
-		DoctorName:  user.Name,
-		Content:     string(afterSecondEncrypt),
+		ObjectType:     "recordObj",
+		PatientID:      patient.IDNumber,
+		PatientName:    patient.Name,
+		DoctorID:       user.IDNumber,
+		DoctorName:     user.Name,
+		ContentEncrypt: afterSecondEncrypt,
 	})
 	if err != nil {
 		getError(c, err, "添加病历失败，请重试")
@@ -225,12 +225,12 @@ func updateRecord(c *gin.Context) {
 		return
 	}
 	transactionID, err := helper.UpdateRecord(service.Record{
-		ObjectType:  "recordObj",
-		PatientID:   patient.IDNumber,
-		PatientName: patient.Name,
-		DoctorID:    user.IDNumber,
-		DoctorName:  user.Name,
-		Content:     string(afterSecondEncrypt),
+		ObjectType:     "recordObj",
+		PatientID:      patient.IDNumber,
+		PatientName:    patient.Name,
+		DoctorID:       user.IDNumber,
+		DoctorName:     user.Name,
+		ContentEncrypt: afterSecondEncrypt,
 	})
 	if err != nil {
 		getError(c, err, "更新病历失败，请重试")
@@ -339,7 +339,7 @@ func searchRecordByKey(c *gin.Context) {
 		return
 	}
 	// 先用病人私钥解密，再用医生私钥解密
-	afterFirstDecrypt, err := security.RsaDecrypt([]byte(result.Content), []byte(patientKey))
+	afterFirstDecrypt, err := security.RsaDecrypt(result.ContentEncrypt, []byte(patientKey))
 	if err != nil {
 		getError(c, err, "使用病人私钥解密信息失败")
 		return
@@ -350,6 +350,21 @@ func searchRecordByKey(c *gin.Context) {
 		return
 	}
 	result.Content = string(afterSecondDecrypt)
+	// 解密历史条目
+	for _, historyItem := range result.Historys {
+		// 先用病人私钥解密，再用医生私钥解密
+		afterFirstDecrypt, err := security.RsaDecrypt(historyItem.History.ContentEncrypt, []byte(patientKey))
+		if err != nil {
+			getError(c, err, "使用病人私钥解密信息失败")
+			return
+		}
+		afterSecondDecrypt, err := security.RsaDecrypt(afterFirstDecrypt, []byte(doctorKey))
+		if err != nil {
+			getError(c, err, "使用医生私钥解密信息失败")
+			return
+		}
+		historyItem.History.Content = string(afterSecondDecrypt)
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"result":  result,
