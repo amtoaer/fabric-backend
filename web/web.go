@@ -19,6 +19,7 @@ func NewRouter() *gin.Engine {
 	user.POST("/register", register)
 	// 搜索功能
 	search := router.Group("/api/search")
+	search.Use(headerAuthorization())
 	search.POST("/byDoctorID", searchRecordByDoctorID)
 	search.POST("byPatientID", searchRecordByPatientID)
 	search.POST("byKey", searchRecordByKey)
