@@ -332,8 +332,8 @@ func searchRecordByKey(c *gin.Context) {
 		getError(c, err, "查询病历信息失败")
 		return
 	}
-	var result *service.Record
-	err = json.Unmarshal([]byte(tmpResult), result)
+	var result service.Record
+	err = json.Unmarshal([]byte(tmpResult), &result)
 	if err != nil {
 		getError(c, err, "解析病历信息失败")
 		return
