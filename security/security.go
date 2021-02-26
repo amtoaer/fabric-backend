@@ -1,6 +1,7 @@
 package security
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -33,31 +34,67 @@ func GenerateRsaKey() (prvKey []byte, pubKey []byte, err error) {
 	return
 }
 
-// RsaEncrypt 使用公钥对信息进行加密
-func RsaEncrypt(data, keyBytes []byte) (result []byte, err error) {
+// RsaEncrypt 使用公钥对信息进行分段加密
+func RsaEncrypt(data, keyBytes []byte) ([]byte, error) {
 	block, _ := pem.Decode(keyBytes)
 	if block == nil {
-		return result, errors.New("public key error")
+		return nil, errors.New("public key error")
 	}
 	pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
-		return
+		return nil, err
 	}
 	pub := pubInterface.(*rsa.PublicKey)
-	result, err = rsa.EncryptPKCS1v15(rand.Reader, pub, data)
-	return
+	var (
+		dataSize = len(data)
+		offSet   = 0
+		once     = pub.Size() - 11
+		endIndex int
+		buffer   bytes.Buffer
+	)
+	for offSet < dataSize {
+		endIndex = offSet + once
+		if endIndex > dataSize {
+			endIndex = dataSize
+		}
+		bytesOnce, err := rsa.EncryptPKCS1v15(rand.Reader, pub, data[offSet:endIndex])
+		if err != nil {
+			return nil, err
+		}
+		buffer.Write(bytesOnce)
+		offSet = endIndex
+	}
+	return buffer.Bytes(), nil
 }
 
 // RsaDecrypt 使用私钥对信息进行解密
-func RsaDecrypt(data, keyBytes []byte) (result []byte, err error) {
+func RsaDecrypt(data, keyBytes []byte) ([]byte, error) {
 	block, _ := pem.Decode(keyBytes)
 	if block == nil {
-		return result, errors.New("private key error")
+		return nil, errors.New("private key error")
 	}
 	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
-		return
+		return nil, err
 	}
-	result, err = rsa.DecryptPKCS1v15(rand.Reader, priv, data)
-	return
+	var (
+		dataSize = len(data)
+		once     = priv.Size()
+		offSet   = 0
+		endIndex int
+		buffer   bytes.Buffer
+	)
+	for offSet < dataSize {
+		endIndex = offSet + once
+		if endIndex > dataSize {
+			endIndex = dataSize
+		}
+		bytesOnce, err := rsa.DecryptPKCS1v15(rand.Reader, priv, data[offSet:endIndex])
+		if err != nil {
+			return nil, err
+		}
+		buffer.Write(bytesOnce)
+		offSet = endIndex
+	}
+	return buffer.Bytes(), nil
 }

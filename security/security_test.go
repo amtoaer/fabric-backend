@@ -7,7 +7,7 @@ func TestSecurity(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	testMessage := "这是一条测试信息"
+	testMessage := "曲曲折折的荷塘上面，弥望的是田田的叶子。叶子出水很高，像亭亭的舞女的裙。"
 	encrypt, _ := RsaEncrypt([]byte(testMessage), publicKey)
 	decrypt, _ := RsaDecrypt(encrypt, privateKey)
 	if string(decrypt) != testMessage {
