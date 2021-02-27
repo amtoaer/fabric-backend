@@ -39,9 +39,9 @@ func GetUserByID(ID uint) (*User, error) {
 }
 
 // FindUser 通过用户编号和密码获取User（登录时用）
-func FindUser(ID, password string) (*User, error) {
+func FindUser(IDNumber, password string) (*User, error) {
 	result := &User{}
-	status := db.Where("id = ? AND password = ?", ID, password).First(result)
+	status := db.Where("id_number = ? AND password = ?", IDNumber, password).First(result)
 	return result, status.Error
 }
 

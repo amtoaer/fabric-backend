@@ -12,7 +12,6 @@ import (
 )
 
 type param struct {
-	ID              string
 	Name            string
 	IDNumber        string
 	Type            bool
@@ -58,13 +57,13 @@ func login(c *gin.Context) {
 		getError(c, nil, "参数格式有误")
 		return
 	}
-	ID := params.ID
+	IDNumber := params.IDNumber
 	password := params.Password
-	if !(checkID(ID) && checkPassword(password)) {
+	if !(checkIDNumber(IDNumber) && checkPassword(password)) {
 		getError(c, nil, "参数内容有误")
 		return
 	}
-	user, err := model.FindUser(ID, password)
+	user, err := model.FindUser(IDNumber, password)
 	if err != nil {
 		getError(c, err, "账户不存在或密码错误，请重试")
 		return
