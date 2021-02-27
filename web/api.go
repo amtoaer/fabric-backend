@@ -351,9 +351,9 @@ func searchRecordByKey(c *gin.Context) {
 	}
 	result.Content = string(afterSecondDecrypt)
 	// 解密历史条目
-	for _, historyItem := range result.Historys {
+	for index := range result.Historys {
 		// 先用病人私钥解密，再用医生私钥解密
-		afterFirstDecrypt, err := security.RsaDecrypt(historyItem.History.ContentEncrypt, []byte(patientKey))
+		afterFirstDecrypt, err := security.RsaDecrypt(result.Historys[index].History.ContentEncrypt, []byte(patientKey))
 		if err != nil {
 			getError(c, err, "使用病人私钥解密信息失败")
 			return
@@ -363,7 +363,7 @@ func searchRecordByKey(c *gin.Context) {
 			getError(c, err, "使用医生私钥解密信息失败")
 			return
 		}
-		historyItem.History.Content = string(afterSecondDecrypt)
+		result.Historys[index].History.Content = string(afterSecondDecrypt)
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
