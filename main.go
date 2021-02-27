@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path"
 
@@ -50,6 +51,7 @@ func main() {
 	web.SetService(s)
 	// 拿到组装好的gin路由
 	router := web.NewRouter()
+	fmt.Println("web服务开始运行，请访问ip:8000查看页面")
 	// 启用web服务并阻塞
 	router.Run(":8000")
 }
