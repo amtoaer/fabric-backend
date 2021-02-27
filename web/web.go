@@ -7,8 +7,10 @@ import (
 
 // NewRouter 返回路由
 func NewRouter() *gin.Engine {
+	gin.SetMode(gin.ReleaseMode)
 	staticFS := getFileSystem()
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Recovery())
 	router.Use(static.Serve("/", staticFS))
 	router.NoRoute(func(c *gin.Context) {
 		c.FileFromFS("/index.html", staticFS)
